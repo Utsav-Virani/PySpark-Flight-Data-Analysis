@@ -19,18 +19,6 @@ def restaurant_shift_coworkers(worker_shifts: RDD) -> RDD:
                               (('Shreya Chmela', 'Leila Jager'), 2),
                               (('Leila Jager', 'Shreya Chmela'), 2)]
     """
-    def n_length_combo(lst, n):
-        if n == 0:
-            return [[]]
-        l = []
-        for i in range(0, len(lst)):
-            m = lst[i]
-            remLst = lst[i + 1:]
-            remainlst_combo = n_length_combo(remLst, n-1)
-            for p in remainlst_combo:
-                l.append([m, *p])
-        return l
-
     worker_shift_mapped = worker_shifts.flatMap(
         lambda line:  [(line.split(",")[1], line.split(",")[0])])
     # worker_shift_grouped = worker_shift_mapped.groupByKey().mapValues(list)
@@ -39,7 +27,11 @@ def restaurant_shift_coworkers(worker_shifts: RDD) -> RDD:
     # worker_names = worker_shift_mapped.flatMap(
     #     lambda line: [line[1]]).distinct()
     # worker_names_mapped = worker_names.cartesian(worker_names).filter(lambda x: x[0][1] not in x[1][1]).map(lambda x: [((item),1) for item in permutations(x, 2)]).flatMap(lambda line: line)
+
+    #return type [((str, str),1)]
     worker_shift_mapped = worker_shift_mapped.cartesian(worker_shift_mapped).filter(lambda x: x[0][0] == x[1][0]).filter(lambda x: x[0][1] not in x[1][1]).map(lambda i : ((i[0][1],i[1][1]),1))
+    
+    #return type [((str, str),int)]
     worker_shift_filtered = worker_shift_mapped.reduceByKey(lambda x, y: x+y).sortBy(lambda x: x[1],False)
     # print(worker_shift_mapped.reduceByKey(lambda x, y: x+y).sortBy(lambda x: x[1],False).take(4))
 
@@ -137,19 +129,19 @@ def main():
     print('Avg. No. of Shared Shifts:',
           sorted_num_coworking_shifts.map(lambda x: x[1]).reduce(lambda x,y: x+y)/sorted_num_coworking_shifts.count())
 
-    # print('########################## Problem 2 ########################')
-    # # problem 2: PySpark DataFrame operations
-    # # read the file
-    # flights = spark.read.csv('Combined_Flights_2021.csv',
-    #                          header=True, inferSchema=True)
-    # print('Q1:', air_flights_most_canceled_flights(flights),
-    #       'had the most canceled flights in September 2021.')
-    # print('Q2:', air_flights_diverted_flights(flights), 'flights were diverted between the period of 20th-30th '
-    #                                                    'November 2021.')
-    # print('Q3:', air_flights_avg_airtime(flights), 'is the average airtime for flights that were flying from '
-    #                                                'Nashville to Chicago.')
-    # print('Q4:', air_flights_missing_departure_time(flights), 'unique dates where departure time (DepTime) was '
-    #                                                           'not recorded.')
+    print('########################## Problem 2 ########################')
+    # problem 2: PySpark DataFrame operations
+    # read the file
+    flights = spark.read.csv('Combined_Flights_2021.csv',
+                             header=True, inferSchema=True)
+    print('Q1:', air_flights_most_canceled_flights(flights),
+          'had the most canceled flights in September 2021.')
+    print('Q2:', air_flights_diverted_flights(flights), 'flights were diverted between the period of 20th-30th '
+                                                       'November 2021.')
+    print('Q3:', air_flights_avg_airtime(flights), 'is the average airtime for flights that were flying from '
+                                                   'Nashville to Chicago.')
+    print('Q4:', air_flights_missing_departure_time(flights), 'unique dates where departure time (DepTime) was '
+                                                              'not recorded.')
 
 
 if __name__ == '__main__':
